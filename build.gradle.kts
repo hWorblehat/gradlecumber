@@ -1,8 +1,26 @@
 import java.io.ByteArrayOutputStream
 
 plugins {
-    `java-gradle-plugin`
+    id("java-gradle-plugin")
+    id("maven-publish")
     id("org.jetbrains.kotlin.jvm") version "1.4.21"
+    id("com.gradle.plugin-publish") version "0.12.0"
+}
+
+group = "dev.hworblehat"
+version = "0.1.0"
+
+pluginBundle {
+    website = "https://github.com/hWorblehat/gradlecumber"
+    vcsUrl = "https://github.com/hWorblehat/gradlecumber"
+    tags = listOf("cucumber", "BDD", "featureTest", "test", "gherkin")
+}
+
+val gradlecumberPlugin by gradlePlugin.plugins.creating {
+    id = "dev.hworblehat.gradlecumber"
+    displayName = "Gradlecumber Cucumber Plugin"
+    description = "Define, run and analyse BDD feature test suites using Cucumber"
+    implementationClass = "dev.hworblehat.gradlecumber.GradlecumberPlugin"
 }
 
 repositories {
@@ -13,16 +31,19 @@ val testGlue by sourceSets.creating
 val kotestVersion = "4.3.+"
 fun kotest(lib: String): String = "io.kotest:kotest-$lib:$kotestVersion"
 
-dependencies {
+configurations {
 
-    api("io.cucumber:messages:13.+")
-    implementation(platform("org.jetbrains.kotlin:kotlin-bom:${kotlin.coreLibrariesVersion}"))
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("io.github.microutils:kotlin-logging:2.+")
+}
+
+dependencies {
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:$embeddedKotlinVersion"))
+    api("io.cucumber:messages:[13,)")
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("io.github.microutils:kotlin-logging:[2,3)")
 
     val testGlueImplementation = testGlue.implementationConfigurationName
 
-    testGlueImplementation(platform("org.jetbrains.kotlin:kotlin-bom:${kotlin.coreLibrariesVersion}"))
+    testGlueImplementation(platform("org.jetbrains.kotlin:kotlin-bom:$embeddedKotlinVersion"))
     testGlueImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     testGlueImplementation("io.cucumber:cucumber-java8:6.+")
     testGlueImplementation(kotest("assertions-core"))
@@ -31,11 +52,6 @@ dependencies {
     testImplementation(kotest("assertions-core"))
     testImplementation("commons-io:commons-io:2.+")
     testImplementation("io.mockk:mockk:1.+")
-}
-
-val gradlecumberPlugin by gradlePlugin.plugins.creating {
-    id = "dev.hworblehat.gradlecumber"
-    implementationClass = "dev.hworblehat.gradlecumber.GradlecumberPlugin"
 }
 
 tasks.withType<Test> {
@@ -111,4 +127,13 @@ arrayOf(
         dependsOn(runCucumber)
     }
 
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "localFileRepository"
+            url = uri("$buildDir/local-repository")
+        }
+    }
 }
