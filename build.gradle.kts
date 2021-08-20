@@ -7,7 +7,7 @@ plugins {
     id("com.gradle.plugin-publish") version "0.12.0"
 }
 
-group = "dev.hworblehat"
+group = "io.github.hWorblehat"
 version = "0.1.0"
 
 pluginBundle {
@@ -16,15 +16,15 @@ pluginBundle {
     tags = listOf("cucumber", "BDD", "featureTest", "test", "gherkin")
 }
 
-val gradlecumberPlugin by gradlePlugin.plugins.creating {
-    id = "dev.hworblehat.gradlecumber"
+val gradlecumberPlugin: PluginDeclaration by gradlePlugin.plugins.creating {
+    id = "io.github.hWorblehat.gradlecumber"
     displayName = "Gradlecumber Cucumber Plugin"
     description = "Define, run and analyse BDD feature test suites using Cucumber"
-    implementationClass = "dev.hworblehat.gradlecumber.GradlecumberPlugin"
+    implementationClass = "io.github.hWorblehat.gradlecumber.GradlecumberPlugin"
 }
 
 repositories {
-    jcenter()
+    mavenCentral()
 }
 
 val testGlue by sourceSets.creating
@@ -37,9 +37,9 @@ configurations {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:$embeddedKotlinVersion"))
-    api("io.cucumber:messages:[13,)")
+    api("io.cucumber:messages:15.+")
     api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("io.github.microutils:kotlin-logging:[2,3)")
+    implementation("io.github.microutils:kotlin-logging:[2.0.10,3)")
 
     val testGlueImplementation = testGlue.implementationConfigurationName
 
@@ -102,14 +102,14 @@ arrayOf(
     val outputFile = messageSamplesRoot.map { it.file("messageSamples/$name.ndjson") }
     val inputFiles = features.map { file("src/test/resources/dummyFeatures/$it.feature") }
 
-    val runCucumber = tasks.register("runCucumberSample${name.capitalize()}", JavaExec::class) {
+    val runCucumber = tasks.register<JavaExec>("runCucumberSample${name.capitalize()}") {
         inputs.files(configurations.named(testGlue.runtimeClasspathConfigurationName))
         inputs.files(testGlue.output)
         inputs.files(inputFiles)
 
         outputs.file(outputFile)
 
-        main = "io.cucumber.core.cli.Main"
+        mainClass.set("io.cucumber.core.cli.Main")
         classpath(testGlue.runtimeClasspath)
         isIgnoreExitValue = true
         args(*inputFiles.map { it.path }.toTypedArray())
